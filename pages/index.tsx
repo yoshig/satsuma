@@ -1,17 +1,39 @@
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { NFT } from '@prisma/client';
 
 export default function Home() {
   const [nfts, setNFTS] = useState<NFT[]>([]);
+  const [filters, setFilters] = useState<{ owner: string, address: string }>({ owner: '', address: '' });
 
-  useEffect(() => {
-    axios.get('/api/nfts?owner=234').then((response) => {
+  const handleFilterUpdate = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setFilters({ ...filters, [event.target.id]: event.target.value})
+  }, [filters]);
+
+  const getNFTRequestUrl = useCallback(() => {
+    const nFTrequestUrl = new URL(`${window.location.href}api/nfts`);
+    if (filters.owner) {
+      nFTrequestUrl.searchParams.append('owner', filters.owner);
+    }
+    if (filters.address) {
+      nFTrequestUrl.searchParams.append('address', filters.address);
+    }
+
+    return nFTrequestUrl;
+  }, [filters]);
+
+  const handleSearch = useCallback(() => {
+    const searchURL = getNFTRequestUrl();
+    axios.get(searchURL.toString()).then((response) => {
       setNFTS(response.data.nfts);
     });
-  }, []);
+  }, [getNFTRequestUrl]);
+
+  useEffect(() => {
+    handleSearch();
+  }, [handleSearch]);
 
   return (
     <div className={styles.container}>
@@ -32,14 +54,18 @@ export default function Home() {
             <label className="text-blue-400 text-sm font-bold m-2">
               Owner address
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                type="text" />
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-300 leading-tight focus:outline-none focus:shadow-outline"
+                type="text"
+                id="owner"
+                onChange={handleFilterUpdate} />
             </label>
             <label className="text-blue-400 text-sm font-bold m-2">
               NFT Address
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                type="text" />
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-300 leading-tight focus:outline-none focus:shadow-outline"
+                id="address"
+                type="text"
+                onChange={handleFilterUpdate} />
             </label>
           </div>
           <button

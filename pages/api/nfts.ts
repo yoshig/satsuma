@@ -7,13 +7,28 @@ type Data = {
   nfts: NFT[]
 }
 
+interface INFTSearchFilter {
+  owner?: string;
+  address?: string;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
-  const { owner } = req.query;
-  console.log(owner);
+  const { owner, address } = req.query;
 
-  const nfts = await prismaClient.nFT.findMany({});
+  const nftFilters = {} as INFTSearchFilter;
+
+  if (owner) {
+    nftFilters.owner = String(owner);
+  }
+  if (address) {
+    nftFilters.address = String(address);
+  }
+
+  const nfts = await prismaClient.nFT.findMany({
+    where: nftFilters
+  });
   res.status(200).json({ nfts: nfts });
 }
