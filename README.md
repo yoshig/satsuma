@@ -16,4 +16,7 @@ npm run dev
 yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Next steps would be:
+- Display event information related to an NFT when clicked
+- Move more objects into components rather than on main page
+- Add additional validation checks and improve import script

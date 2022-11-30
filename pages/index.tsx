@@ -3,8 +3,7 @@ import styles from '../styles/Home.module.css'
 import axios from 'axios';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { NFT } from '@prisma/client';
-
-const NFT_PAGE_ENTRIES_LENGTH = 10;
+import Pagination from '../components/Pagination';
 
 export default function Home() {
   const [nfts, setNFTS] = useState<NFT[]>([]);
@@ -16,7 +15,15 @@ export default function Home() {
     setFilters({ ...filters, [event.target.id]: event.target.value})
   }, [filters]);
 
-  const getNFTRequestUrl = useCallback((page: number) => {
+  const handleSearch = useCallback((searchURL: URL) => {
+    axios.get(searchURL.toString()).then((response) => {
+      setNFTS(response.data.nfts);
+      setTotalNFTs(response.data.total);
+    });
+  }, []);
+
+  const handleUserSearch = useCallback((page: number) => {
+    setPage(page);
     const nFTrequestUrl = new URL(`${window.location.href}api/nfts`);
     if (filters.owner) {
       nFTrequestUrl.searchParams.append('owner', filters.owner);
@@ -26,15 +33,8 @@ export default function Home() {
     }
     nFTrequestUrl.searchParams.append('page', String(page));
 
-    return nFTrequestUrl;
-  }, [filters]);
-
-  const handleSearch = useCallback((searchURL: URL) => {
-    axios.get(searchURL.toString()).then((response) => {
-      setNFTS(response.data.nfts);
-      setTotalNFTs(response.data.total);
-    });
-  }, []);
+    handleSearch(nFTrequestUrl);
+  }, [filters, handleSearch]);
 
   useEffect(() => {
     handleSearch(new URL(`${window.location.href}api/nfts`));
@@ -77,8 +77,7 @@ export default function Home() {
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 m-2 px-4 rounded focus:outline-none focus:shadow-outline"
             type="button"
             onClick={() => {
-              setPage(0);
-              handleSearch(getNFTRequestUrl(0));
+              handleUserSearch(0);
             }}>
             Search
           </button>
@@ -109,33 +108,11 @@ export default function Home() {
             )
         }
         </div>
-        <div className="flex justify-center">
-          <div className="flex flex-col items-center">
-            <span className="text-sm text-gray-700 dark:text-gray-400">
-              Showing <span className="font-semibold text-gray-900 dark:text-white">{(page * NFT_PAGE_ENTRIES_LENGTH) + 1}</span> to <span className="font-semibold text-gray-900 dark:text-white">{Math.min((page * NFT_PAGE_ENTRIES_LENGTH) + 10, totalNFTs)}</span> of <span className="font-semibold text-gray-900 dark:text-white">{totalNFTs}</span> Entries
-            </span>
-            <div className="inline-flex mt-2 xs:mt-0">
-              <button
-                className="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-l hover:bg-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                onClick={() => {
-                  const newPage = Math.max(page - 1, 0);
-                  setPage(newPage);
-                  handleSearch(getNFTRequestUrl(newPage));
-                }}>
-                  Prev
-              </button>
-              <button
-                className="px-4 py-2 text-sm font-medium text-white bg-gray-800 border-0 border-l border-gray-700 rounded-r hover:bg-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                onClick={() => {
-                  const newPage = Math.min(page + 1, Math.floor(totalNFTs / NFT_PAGE_ENTRIES_LENGTH));
-                  setPage(newPage);
-                  handleSearch(getNFTRequestUrl(newPage));
-                }}>
-                  Next
-              </button>
-            </div>
-          </div>
-        </div>
+        <Pagination
+          handleSearch={handleUserSearch}
+          page={page}
+          totalNFTs={totalNFTs}
+          />
       </main>
     </div>
   )
