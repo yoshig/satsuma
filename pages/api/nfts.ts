@@ -4,19 +4,21 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import prismaClient from '../../prisma/prismaClient';
 
 type Data = {
-  nfts: NFT[]
+  nfts: NFT[];
+  total: number;
 }
-
 interface INFTSearchFilter {
   owner?: string;
   address?: string;
 }
 
+const NFT_PAGE_ENTRIES_LENGTH = 10;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
-  const { owner, address } = req.query;
+  const { owner, address, page } = req.query;
 
   const nftFilters = {} as INFTSearchFilter;
 
@@ -27,8 +29,18 @@ export default async function handler(
     nftFilters.address = String(address);
   }
 
-  const nfts = await prismaClient.nFT.findMany({
-    where: nftFilters
-  });
-  res.status(200).json({ nfts: nfts });
+  const skipPages = Number(page) || 0;
+
+  const nftRequest = await prismaClient.$transaction([
+    prismaClient.nFT.count({
+      where: nftFilters
+    }),
+    prismaClient.nFT.findMany({
+      where: nftFilters,
+      take: NFT_PAGE_ENTRIES_LENGTH,
+      skip: skipPages * NFT_PAGE_ENTRIES_LENGTH
+    }),
+  ]);
+
+  res.status(200).json({ total: nftRequest[0], nfts: nftRequest[1] });
 }
