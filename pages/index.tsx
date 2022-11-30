@@ -24,15 +24,14 @@ export default function Home() {
     return nFTrequestUrl;
   }, [filters]);
 
-  const handleSearch = useCallback(() => {
-    const searchURL = getNFTRequestUrl();
+  const handleSearch = useCallback((searchURL: URL) => {
     axios.get(searchURL.toString()).then((response) => {
       setNFTS(response.data.nfts);
     });
-  }, [getNFTRequestUrl]);
+  }, []);
 
   useEffect(() => {
-    handleSearch();
+    handleSearch(new URL(`${window.location.href}api/nfts`));
   }, [handleSearch]);
 
   return (
@@ -70,7 +69,8 @@ export default function Home() {
           </div>
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 m-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            type="button">
+            type="button"
+            onClick={() => { handleSearch(getNFTRequestUrl())}}>
             Search
           </button>
         </div>
