@@ -74,28 +74,37 @@ export default function Home() {
             Search
           </button>
         </div>
-          <table className="border-collapse table-auto w-full">
-            <thead>
-              <tr className="text-left">
-                <th className="p-2">Address</th>
-                <th className="p-2">Owner</th>
-                <th className="p-2">Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              {
-                nfts.map((nft) => {
-                  return (
-                    <tr key={nft.address}>
-                      <td className="p-2">{nft.address}</td>
-                      <td className="p-2">{nft.owner}</td>
-                      <td className="p-2">{nft.priceEth}</td>
+        {
+          nfts.length === 0
+            ? <div>No NFTs Found with those search conditions</div>
+            : (
+              <div>
+                <h2 className="p-2">{nfts.length} NFTs Found</h2>
+                <table className="border-collapse table-auto w-full">
+                  <thead>
+                    <tr className="text-left">
+                      <th className="p-2">Address</th>
+                      <th className="p-2">Owner</th>
+                      <th className="p-2">Price</th>
                     </tr>
-                  )
-                })
-              }
-            </tbody>
-          </table>
+                  </thead>
+                  <tbody>
+                    {
+                      nfts.map((nft) => {
+                        return (
+                          <tr key={nft.address}>
+                            <td className="p-2">{nft.address}</td>
+                            <td className="p-2">{nft.owner}</td>
+                            <td className="p-2">{nft.priceEth}</td>
+                          </tr>
+                        )
+                      })
+                    }
+                  </tbody>
+                </table>
+              </div>
+            )
+        }
         </div>
       </main>
     </div>
