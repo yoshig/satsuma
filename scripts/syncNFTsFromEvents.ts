@@ -1,11 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
-import next from 'next';
+import { BlockchainEvent } from '@prisma/client';
 
 const prismaClient = new PrismaClient();
-
-
 const newEventFile = fs.readFileSync(
   path.resolve('./files/events.txt'),
   'utf-8',
@@ -13,17 +11,36 @@ const newEventFile = fs.readFileSync(
 
 const events = newEventFile.split('\n');
 
-const syncEventsWithDB = async (events: any) => {
-  for (const event of events) {
+const updateNFT = async (event: BlockchainEvent) => {
+  await prismaClient.nFT.upsert({
+    where: {
+      address: event.nftContractAddress
+    },
+    update: {
+      owner: event.toAddress
+    },
+    create: {
+      address: event.nftContractAddress,
+      owner: event.toAddress,
+      priceEth: event.priceEth
+    }
+  });
+}
+
+const syncEventsWithDB = async (eventLines: string[]) => {
+  for (const eventString of eventLines) {
     try {
-      const eventJson = JSON.parse(event);
+      const blockchainEvent = JSON.parse(eventString);
       await prismaClient.blockchainEvent.create({
-        data: eventJson
+        data: blockchainEvent
       })
+      await updateNFT(blockchainEvent);
     } catch {
-      console.error(`Error with event: ${event}`);
+      console.error(`Error with event: ${eventString}`);
     }
   }
 }
+
+console.log('Beginning Sync');
 
 syncEventsWithDB(events);

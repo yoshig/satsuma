@@ -11,10 +11,17 @@ datasource db {
 }
 
 model BlockchainEvent {
-  id    Int     @id @default(autoincrement())
+  id Int @id @default(autoincrement())
   nftContractAddress String
   fromAddress  String
   toAddress String
   priceEth Int
   timestamp Int
+}
+
+model NFT {
+  id Int @id @default(autoincrement())
+  address String @unique
+  priceEth Int
+  owner String
 }
